@@ -1,6 +1,7 @@
 package com.aliyun.openservices.loghub.client.config;
 
 import com.aliyun.openservices.log.common.auth.CredentialsProvider;
+import com.aliyun.openservices.log.http.comm.ServiceClient;
 import com.aliyun.openservices.log.http.signer.SignVersion;
 
 import java.io.Serializable;
@@ -56,6 +57,15 @@ public class LogHubConfig implements Serializable {
     private SignVersion signVersion = SignVersion.V1;
     private String region;
     private CompressType compressType;
+    /**
+     * Optional injection seam for tests. When non-null, {@link
+     * com.aliyun.openservices.loghub.client.LogHubClientAdapter} will pass this
+     * {@link ServiceClient} into the underlying {@link
+     * com.aliyun.openservices.log.Client} so HTTP traffic can be intercepted
+     * by a fake. Production code should leave this {@code null} to keep the
+     * default transport.
+     */
+    private transient ServiceClient serviceClient;
 
     private LogHubConfig(String consumerGroup,
                          String consumer,
@@ -432,6 +442,24 @@ public class LogHubConfig implements Serializable {
 
     public void setCompressType(CompressType compressType) {
         this.compressType = compressType;
+    }
+
+    /**
+     * Returns the {@link ServiceClient} injected for test purposes, or
+     * {@code null} when the consumer should build its own.
+     */
+    public ServiceClient getServiceClient() {
+        return serviceClient;
+    }
+
+    /**
+     * Inject a custom {@link ServiceClient} (typically a {@code
+     * FakeServiceClient}) so tests can intercept HTTP traffic without
+     * touching the network. Pass {@code null} to restore the default
+     * transport.
+     */
+    public void setServiceClient(ServiceClient serviceClient) {
+        this.serviceClient = serviceClient;
     }
     public void setProcessor(String processor) {
         this.processor = processor;

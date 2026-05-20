@@ -1,3 +1,5 @@
+package com.aliyun.openservices.loghub.client.test;
+
 import java.util.List;
 
 import com.aliyun.openservices.log.common.LogGroupData;

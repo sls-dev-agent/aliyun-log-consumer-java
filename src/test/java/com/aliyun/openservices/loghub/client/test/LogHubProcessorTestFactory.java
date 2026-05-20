@@ -1,3 +1,5 @@
+package com.aliyun.openservices.loghub.client.test;
+
 import com.aliyun.openservices.loghub.client.interfaces.ILogHubProcessor;
 import com.aliyun.openservices.loghub.client.interfaces.ILogHubProcessorFactory;
 

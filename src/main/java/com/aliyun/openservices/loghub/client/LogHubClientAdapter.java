@@ -7,6 +7,7 @@ import com.aliyun.openservices.log.common.ConsumerGroup;
 import com.aliyun.openservices.log.common.ConsumerGroupShardCheckPoint;
 import com.aliyun.openservices.log.exception.LogException;
 import com.aliyun.openservices.log.http.client.ClientConfiguration;
+import com.aliyun.openservices.log.http.comm.ServiceClient;
 import com.aliyun.openservices.log.request.PullLogsRequest;
 import com.aliyun.openservices.log.response.ConsumerGroupCheckPointResponse;
 import com.aliyun.openservices.log.response.ListConsumerGroupResponse;
@@ -67,8 +68,16 @@ public class LogHubClientAdapter {
     }
 
     private Client createClient(String endpoint, String accessKeyId, String accessKey, String stsToken) {
-        ClientConfiguration clientConfig = getClientConfiguration(config);
-        Client client = new Client(endpoint, accessKeyId, accessKey, clientConfig);
+        ServiceClient injected = config.getServiceClient();
+        Client client;
+        if (injected != null) {
+            // Test injection: bypass the real HTTP transport. The 4-arg ctor
+            // installs the supplied ServiceClient on the underlying Client.
+            client = new Client(endpoint, accessKeyId, accessKey, injected);
+        } else {
+            ClientConfiguration clientConfig = getClientConfiguration(config);
+            client = new Client(endpoint, accessKeyId, accessKey, clientConfig);
+        }
         if (stsToken != null) {
             client.setSecurityToken(stsToken);
         }
@@ -82,8 +91,14 @@ public class LogHubClientAdapter {
             return createClient(config.getEndpoint(), config.getAccessId(), config.getAccessKey(), config.getStsToken());
         }
 
-        ClientConfiguration clientConfig = getClientConfiguration(config);
-        Client client = new Client(config.getEndpoint(), config.getCredentialsProvider(), clientConfig, null);
+        Client client;
+        ServiceClient injected = config.getServiceClient();
+        if (injected != null) {
+            client = new Client(config.getEndpoint(), config.getCredentialsProvider(), injected, null);
+        } else {
+            ClientConfiguration clientConfig = getClientConfiguration(config);
+            client = new Client(config.getEndpoint(), config.getCredentialsProvider(), clientConfig, null);
+        }
         client.setUserAgent(userAgent);
         client.setUseDirectMode(config.isDirectModeEnabled());
         return client;
